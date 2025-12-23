@@ -147,16 +147,15 @@
             overflow: hidden;
         }
 
-        /* APlayer Customization */
-        #aplayer {
+        /* NetEase Player Position */
+        #netease-player {
             position: fixed;
             bottom: 20px;
             left: 20px;
-            width: 300px;
             z-index: 9999;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-            /* Gold glow */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
             border-radius: 4px;
+            overflow: hidden;
         }
 
         .top-right-ui {
@@ -166,17 +165,6 @@
             z-index: 20;
         }
 
-        /* APlayer Customization */
-        #aplayer {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 300px;
-            z-index: 9999;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-            /* Gold glow */
-            border-radius: 4px;
-        }
 
         /* Start Overlay */
         #start-overlay {
@@ -245,6 +233,13 @@
     <div id="start-overlay">
         <div class="start-text">CLICK TO ENTER MAGIC</div>
         <div style="font-size: 12px; color: #666; margin-top: 10px;">(Enables Audio)</div>
+    </div>
+
+    <!-- NetEase Cloud Music Iframe -->
+    <div id="netease-player">
+        <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86"
+            src="//music.163.com/outchain/player?type=2&id=2137781007&auto=1&height=66">
+        </iframe>
     </div>
 
     <!-- UI -->
@@ -384,42 +379,8 @@
                     });
                 }
 
-                // 2. Load Music (APlayer)
-                if (CUSTOM_ASSETS.music) {
-                    if (typeof APlayer !== 'undefined') {
-                        try {
-                            this.ap = new APlayer({
-                                container: document.getElementById('aplayer'),
-                                fixed: false,
-                                autoplay: false,
-                                theme: '#d4af37',
-                                loop: 'all',
-                                order: 'list',
-                                preload: 'auto',
-                                volume: 0.7,
-                                mutex: true,
-                                listFolded: false,
-                                audio: [
-                                    {
-                                        name: 'Christmas Star',
-                                        artist: 'Music',
-                                        url: CUSTOM_ASSETS.music,
-                                        cover: 'https://cdn-icons-png.flaticon.com/512/614/614105.png'
-                                    }
-                                ]
-                            });
-                            console.log("APlayer Initialized");
-
-                            if (STATE.userHasStarted) {
-                                this.ap.play();
-                            }
-                        } catch (err) {
-                            console.warn("APlayer Init Failed:", err);
-                        }
-                    } else {
-                        console.warn("APlayer library not loaded.");
-                    }
-                }
+                // 2. Load Music (Remotely Handled by NetEase Iframe)
+                // No local init required.
             }
 
             initScene() {
@@ -920,13 +881,8 @@
                     startOverlay.style.opacity = 0;
                     setTimeout(() => startOverlay.style.display = 'none', 800);
 
-                    // 2. Play Music
-                    if (this.bgm) {
-                        this.bgm.play().catch(e => console.warn("Start play failed", e));
-                        console.log("Start Click: Playing Native Audio");
-                    } else {
-                        console.log("Music not loaded yet, queued for initStaticAssets");
-                    }
+                    // Iframe handles music, no JS needed here.
+                    console.log("Overlay Hidden. Music should autoplay from Iframe or be manually started.");
                 });
 
                 // Music Input Listener REMOVED (Static Asset Only)
