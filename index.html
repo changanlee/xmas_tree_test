@@ -147,6 +147,18 @@
             overflow: hidden;
         }
 
+        /* APlayer Customization */
+        #aplayer {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 300px;
+            z-index: 9999;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            /* Gold glow */
+            border-radius: 4px;
+        }
+
         .top-right-ui {
             position: absolute;
             top: 20px;
@@ -902,16 +914,9 @@
                     setTimeout(() => startOverlay.style.display = 'none', 800);
 
                     // 2. Play Music (Interaction allows this!)
-                    if (this.bgm) {
-                        isMuted = false;
-                        this.bgm.mute(false);
-
-                        if (!this.bgm.playing()) {
-                            this.bgm.play();
-                            this.bgm.fade(0, 0.5, 2000); // Effect
-                        }
-                        console.log("Start Click Play Triggered");
-                        muteBtn.innerText = '🔊';
+                    if (this.ap) {
+                        this.ap.play();
+                        console.log("Start Click: Playing APlayer");
                     } else {
                         console.log("Music not loaded yet, queued for initStaticAssets");
                     }
