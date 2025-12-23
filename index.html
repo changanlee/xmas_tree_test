@@ -387,32 +387,38 @@
 
                 // 2. Load Music (APlayer)
                 if (CUSTOM_ASSETS.music) {
-                    this.ap = new APlayer({
-                        container: document.getElementById('aplayer'),
-                        fixed: false, // Widget mode (bottom-left)
-                        autoplay: false, // Browser policy blocks this anyway
-                        theme: '#d4af37', // Gold theme
-                        loop: 'all',
-                        order: 'list',
-                        preload: 'auto',
-                        volume: 0.7,
-                        mutex: true,
-                        listFolded: false,
-                        audio: [
-                            {
-                                name: 'Christmas Star',
-                                artist: 'Music',
-                                url: CUSTOM_ASSETS.music,
-                                cover: 'https://cdn-icons-png.flaticon.com/512/614/614105.png' // Default festive icon
+                    if (typeof APlayer !== 'undefined') {
+                        try {
+                            this.ap = new APlayer({
+                                container: document.getElementById('aplayer'),
+                                fixed: false,
+                                autoplay: false,
+                                theme: '#d4af37',
+                                loop: 'all',
+                                order: 'list',
+                                preload: 'auto',
+                                volume: 0.7,
+                                mutex: true,
+                                listFolded: false,
+                                audio: [
+                                    {
+                                        name: 'Christmas Star',
+                                        artist: 'Music',
+                                        url: CUSTOM_ASSETS.music,
+                                        cover: 'https://cdn-icons-png.flaticon.com/512/614/614105.png'
+                                    }
+                                ]
+                            });
+                            console.log("APlayer Initialized");
+
+                            if (STATE.userHasStarted) {
+                                this.ap.play();
                             }
-                        ]
-                    });
-
-                    console.log("APlayer Initialized");
-
-                    // Queue Play Logic
-                    if (STATE.userHasStarted) {
-                        this.ap.play();
+                        } catch (err) {
+                            console.warn("APlayer Init Failed:", err);
+                        }
+                    } else {
+                        console.warn("APlayer library not loaded.");
                     }
                 }
             }
