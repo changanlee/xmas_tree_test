@@ -290,9 +290,8 @@
             // 1. Photos: Put them in a folder (e.g. 'photos/') and list filenames here
             // Example: ['photos/pic1.jpg', 'photos/pic2.png']
             photos: [
-                'photos/CleanShot 2025-09-18 at 16.44.10@2x.png', 
-                'photos/IMG_6824.PNG',
-                'photos/帥.jpg'
+                // 'photos/1.jpg', 
+                // 'photos/2.jpg'
             ],
 
             // 2. Music: Put mp3 in a folder (e.g. 'music/') and set path here
@@ -1053,29 +1052,36 @@
                 // Safety: Ensure we have at least one hand
                 if (!allLandmarks || allLandmarks.length === 0) return;
 
-                // --- GESTURE AUTOPLAY HACK ---
-                // Attempt to play music on first hand detection
-                if (!STATE.hasAutoPlayed && this.bgm) {
-                    STATE.hasAutoPlayed = true; // Try only once to avoid error spam
-                    const p = this.bgm.play();
-                    if (p !== undefined) {
-                        p.then(() => {
-                            console.log("Gesture Autoplay Success!");
-                            document.getElementById('mute-btn').innerText = '🔊';
-                            if (this.bgm) this.bgm.muted = false;
-                        }).catch(e => {
-                            console.warn("Gesture Autoplay Blocked by Browser:", e);
-                            // Fallback: User must click mute button manually
-                        });
-                    }
-                }
-
                 // Use the first hand for standard interaction
                 const landmarks = allLandmarks[0];
 
                 // Helper for distance (Single Hand)
                 const dist = (i, j) => Math.hypot(landmarks[i].x - landmarks[j].x, landmarks[i].y - landmarks[j].y);
                 const dIndex = dist(8, 0), dMiddle = dist(12, 0), dRing = dist(16, 0), dPinky = dist(20, 0);
+
+                // --- GESTURE AUTOPLAY HACK ---
+                // Attempt to play music on first hand detection
+                // Wrapped in try-catch to ensure it NEVER blocks gesture logic
+                try {
+                    if (!STATE.hasAutoPlayed && this.bgm) {
+                        STATE.hasAutoPlayed = true;
+                        const p = this.bgm.play();
+                        if (p !== undefined) {
+                            p.then(() => {
+                                console.log("Gesture Autoplay Success!");
+                                document.getElementById('mute-btn').innerText = '🔊';
+                                if (this.bgm) this.bgm.muted = false;
+                            }).catch(e => {
+                                // Silent fail is fine, user can click mute button
+                                console.warn("Autoplay blocked (Expected):", e);
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.warn("Autoplay Logic Error:", err);
+                }
+
+                // --- LOVE MODE LOGIC ---
 
                 // --- LOVE MODE LOGIC ---
                 // 1. Lock: Gallery Mode -> NO INTERACTION
