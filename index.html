@@ -873,8 +873,15 @@
                     startOverlay.style.opacity = 0;
                     setTimeout(() => startOverlay.style.display = 'none', 800);
 
-                    // Iframe handles music, no JS needed here.
-                    console.log("Overlay Hidden. Music should autoplay from Iframe or be manually started.");
+                    // 2. Play Music (Interaction allows this!)
+                    // MetingJS exposes the 'aplayer' instance on the element
+                    const meting = document.querySelector('meting-js');
+                    if (meting && meting.aplayer) {
+                        console.log("Start Click: Triggering MetingJS Autoplay");
+                        meting.aplayer.play();
+                    } else {
+                        console.warn("MetingJS not ready yet");
+                    }
                 });
 
                 // Music Input Listener REMOVED (Static Asset Only)
