@@ -11,6 +11,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Times+New+Roman&display=swap"
         rel="stylesheet">
+    <!-- Force HTTPS (Required for Camera Access) -->
+    <script>
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            location.replace(`https:${location.href.substring(location.protocol.length)}`);
+        }
+    </script>
 
     <style>
         :root {
@@ -198,7 +204,18 @@
                 dustCount: 4000,
                 scatterRadius: 20
             },
-            textPhotoContent: "JOYEUX NOEL",
+            particles: {
+                mainCount: 2000,
+                dustCount: 4000,
+                scatterRadius: 20
+            },
+            // textPhotoContent: "JOYEUX NOEL", // Deprecated
+            cardMessages: [
+                "Merry Christmas",
+                "Joy to the World",
+                "Happy New Year",
+                "Love & Peace"
+            ],
             gestures: { palmOpenThreshold: 0.35, sensitivity: 6.0 }
         };
 
@@ -209,9 +226,8 @@
             // 1. Photos: Put them in a folder (e.g. 'photos/') and list filenames here
             // Example: ['photos/pic1.jpg', 'photos/pic2.png']
             photos: [
-                'photos/CleanShot 2025-09-18 at 16.44.10@2x.png', 
-                'photos/IMG_6824.PNG',
-                'photos/帥.jpg'
+                // 'photos/1.jpg', 
+                // 'photos/2.jpg'
             ],
 
 
@@ -484,7 +500,15 @@
                 this.scene.add(dustSystem);
 
                 // --- Default Photo (Scattered) ---
-                this.addTextPhoto(CONFIG.textPhotoContent);
+                // --- Text Cards (From Config) ---
+                if (CONFIG.cardMessages && CONFIG.cardMessages.length > 0) {
+                    CONFIG.cardMessages.forEach(msg => {
+                        this.addTextPhoto(msg);
+                    });
+                } else {
+                    // Fallback
+                    this.addTextPhoto("Merry Christmas");
+                }
 
                 this.createTopStar();
 
@@ -683,25 +707,67 @@
 
 
             addTextPhoto(text) {
+                // Card Aspect Ratio: 5:7 (e.g. 500x700)
+                const width = 500;
+                const height = 700;
                 const canvas = document.createElement('canvas');
-                canvas.width = 512;
-                canvas.height = 512;
+                canvas.width = width;
+                canvas.height = height;
                 const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(0, 0, 512, 512);
-                ctx.fillStyle = '#d4af37';
-                ctx.font = 'bold 60px "Times New Roman"';
+
+                // 1. Background (Cream/Parchment)
+                ctx.fillStyle = '#FDF5E6';
+                ctx.fillRect(0, 0, width, height);
+
+                // 2. Texture/Noise (Subtle)
+                // ctx.globalAlpha = 0.05;
+                // ctx.fillStyle = '#000';
+                // for(let i=0; i<1000; i++) ctx.fillRect(Math.random()*width, Math.random()*height, 2, 2);
+                // ctx.globalAlpha = 1.0;
+
+                // 3. Border (Gold Double Line)
+                ctx.strokeStyle = '#D4AF37';
+                ctx.lineWidth = 15;
+                ctx.strokeRect(20, 20, width - 40, height - 40);
+
+                ctx.lineWidth = 4;
+                ctx.strokeRect(35, 35, width - 70, height - 70);
+
+                // 4. Text
+                ctx.fillStyle = '#8B0000'; // Dark Red
+                // Adjust font size based on text length
+                const fontSize = text.length > 10 ? 60 : 80;
+                ctx.font = `bold ${fontSize}px "Cinzel", serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(text, 256, 256);
+
+                // Breaking text into lines if too long? For now simple wrap
+                const words = text.split(' ');
+                if (words.length > 2) {
+                    // Simple 2-line split
+                    const mid = Math.ceil(words.length / 2);
+                    const line1 = words.slice(0, mid).join(' ');
+                    const line2 = words.slice(mid).join(' ');
+                    ctx.fillText(line1, width / 2, height / 2 - 40);
+                    ctx.fillText(line2, width / 2, height / 2 + 40);
+                } else {
+                    ctx.fillText(text, width / 2, height / 2);
+                }
+
+                // Decorative Corner (Simple Circle)
+                ctx.fillStyle = '#D4AF37';
+                ctx.beginPath(); ctx.arc(width / 2, 80, 10, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(width / 2, height - 80, 10, 0, Math.PI * 2); ctx.fill();
 
                 const texture = new THREE.CanvasTexture(canvas);
                 texture.colorSpace = THREE.SRGBColorSpace;
-                this.addPhotoToScene(texture, true);
+
+                // Add to scene with specific dimensions (0.5 x 0.7)
+                this.addPhotoToScene(texture, true, 0.5, 0.7);
             }
 
-            addPhotoToScene(texture, isDefault = false) {
-                const geo = new THREE.BoxGeometry(0.6, 0.6, 0.05);
+            addPhotoToScene(texture, isDefault = false, width = 0.6, height = 0.6) {
+                const geo = new THREE.BoxGeometry(width, height, 0.05);
                 // Fix Glare: Use BasicMaterial (Unlit) + Disable Tone Mapping
                 // Use grey color (0.86) to stay below Bloom Threshold (0.9)
                 const mat = new THREE.MeshBasicMaterial({
