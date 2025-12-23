@@ -309,9 +309,7 @@
                 // 'photos/2.jpg'
             ],
 
-            // 2. Music: Put mp3 in a folder (e.g. 'music/') and set path here
-            // Example: 'music/bgm.mp3'
-            music: 'JayChou-Chrismas_Star.mp3'
+
         };
 
         // --- Global State ---
@@ -339,8 +337,7 @@
             },
             // Finger Heart Debounce
             isHeartDebounce: false,
-            lastHeartTime: 0,
-            userHasStarted: false // Replaces auto-play hack: Tracks click
+            lastHeartTime: 0
         };
 
         // --- Main App Logic ---
@@ -381,8 +378,7 @@
                     });
                 }
 
-                // 2. Load Music (Remotely Handled by NetEase Iframe)
-                // No local init required.
+
             }
 
             initScene() {
@@ -877,8 +873,6 @@
                 // --- START OVERLAY LOGIC ---
                 const startOverlay = document.getElementById('start-overlay');
                 startOverlay.addEventListener('click', () => {
-                    STATE.userHasStarted = true; // Mark interaction
-
                     // 1. Hide Overlay
                     startOverlay.style.opacity = 0;
                     setTimeout(() => startOverlay.style.display = 'none', 800);
@@ -1040,20 +1034,53 @@
                 const startOverlay = document.getElementById('start-overlay');
 
                 if (loader && loader.style.display !== 'none') {
-                    console.log("Loader Finished -> Show Start Overlay");
-                    loader.style.opacity = 0;
-                    setTimeout(() => {
-                        loader.style.display = 'none';
-                        // Show Click Overlay
-                        if (startOverlay) {
-                            startOverlay.style.display = 'flex';
-                            // Small delay to allow display:flex to apply before opacity transition
-                            requestAnimationFrame(() => {
-                                startOverlay.style.opacity = 1;
+                    console.log("Loader Finished -> Attempting Smart Autoplay");
+
+                    // 1. Try to play music immediately
+                    let autoPlaySuccess = false;
+                    const meting = document.querySelector('meting-js');
+
+                    if (meting && meting.aplayer) {
+                        const playPromise = meting.aplayer.play();
+
+                        // Modern Browsers return a Promise for play()
+                        if (playPromise !== undefined) {
+                            playPromise.then(() => {
+                                console.log("✨ Autoplay Successful! Skipping Overlay.");
+                                autoPlaySuccess = true;
+                                // If successful, we don't need the overlay
+                                this.finalizeLoader(loader, startOverlay, true);
+                            }).catch(error => {
+                                console.warn("🚫 Autoplay Blocked by Browser:", error);
+                                // Blocked? Show the Overlay as fallback
+                                this.finalizeLoader(loader, startOverlay, false);
                             });
+                        } else {
+                            // Older way (no promise), assume success or just show overlay to be safe
+                            this.finalizeLoader(loader, startOverlay, false);
                         }
-                    }, 800);
+                    } else {
+                        // APlayer not ready? Show overlay
+                        this.finalizeLoader(loader, startOverlay, false);
+                    }
                 }
+            }
+
+            finalizeLoader(loader, startOverlay, skipOverlay) {
+                // Fade out loader
+                loader.style.opacity = 0;
+
+                setTimeout(() => {
+                    loader.style.display = 'none';
+
+                    if (!skipOverlay && startOverlay) {
+                        // Only show overlay if autoplay failed
+                        startOverlay.style.display = 'flex';
+                        requestAnimationFrame(() => {
+                            startOverlay.style.opacity = 1;
+                        });
+                    }
+                }, 800);
             }
 
             predictWebcam() {
