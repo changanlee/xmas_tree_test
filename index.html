@@ -284,10 +284,12 @@
         import { FilesetResolver, HandLandmarker } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/+esm';
 
         // ERROR TRAPPING
-        window.onerror = function (msg, url, line, col, error) {
-            alert("Error: " + msg + "\nLine: " + line);
-            return false;
-        };
+        // ERROR TRAPPING
+        // window.onerror = function (msg, url, line, col, error) {
+        //     console.error("Global Error:", msg, line);
+        //     // alert("Error: " + msg + "\nLine: " + line); // Disable for production
+        //     return false;
+        // };
 
         // --- Configuration ---
         const CONFIG = {
