@@ -47,44 +47,7 @@
             pointer-events: none;
         }
 
-        .upload-wrapper {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            z-index: 10;
-            transition: opacity 0.5s ease;
-        }
 
-        .upload-btn {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--color-gold);
-            color: var(--color-gold);
-            padding: 12px 24px;
-            font-family: 'Cinzel', serif;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .upload-btn:hover {
-            background: rgba(212, 175, 55, 0.2);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-        }
-
-        .instruction {
-            font-size: 12px;
-            color: var(--color-cream);
-            opacity: 0.7;
-            letter-spacing: 1px;
-        }
 
         /* Loader */
         #loader {
@@ -129,10 +92,7 @@
             }
         }
 
-        .ui-hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
+
 
         /* Hidden Webcam Container */
         .webcam-container {
@@ -195,16 +155,7 @@
 
 
 
-    <div class="upload-wrapper">
-        <!-- Removed Upload & Music Buttons for GitHub Deployment -->
-        <!-- <button class="upload-btn" onclick="document.getElementById('file-input').click()">ADD MEMORIES</button> -->
-        <!-- <button class="upload-btn" id="music-btn" style="min-width: 50px;">🎵</button> -->
 
-        <!-- Hidden Inputs for logic compatibility -->
-        <input type="file" id="file-input" accept="image/*" style="display: none">
-        <input type="file" id="music-input" accept="audio/*" style="display: none">
-        <!-- <div class="instruction">Press 'H' to Hide Controls</div> -->
-    </div>
 
     <!-- Hidden Webcam -->
     <div class="webcam-container">
@@ -258,9 +209,8 @@
             // 1. Photos: Put them in a folder (e.g. 'photos/') and list filenames here
             // Example: ['photos/pic1.jpg', 'photos/pic2.png']
             photos: [
-                'photos/CleanShot 2025-09-18 at 16.44.10@2x.png', 
-                'photos/IMG_6824.PNG',
-                'photos/帥.jpg'
+                // 'photos/1.jpg', 
+                // 'photos/2.jpg'
             ],
 
 
@@ -789,51 +739,16 @@
 
                 STATE.targetPhoto = sorted[nextIndex];
 
-                // If we selected the default text photo, set flag if needed (optional now as we handle it generically)
-                // But we still set focus mode
-                STATE.mode = 'FOCUS';
+                if (STATE.targetPhoto) {
+                    STATE.mode = 'FOCUS';
+                }
             }
 
             initEvents() {
                 window.addEventListener('resize', this.onWindowResize.bind(this));
-
-                // Keyboard H for Hide
-                window.addEventListener('keydown', (e) => {
-                    if (e.key === 'h' || e.key === 'H') {
-                        document.querySelector('h1').classList.toggle('ui-hidden');
-                        document.querySelector('.upload-wrapper').classList.toggle('ui-hidden');
-                    }
-                });
-
-                // File Upload
-                const input = document.getElementById('file-input');
-                input.addEventListener('change', (e) => {
-                    const f = e.target.files[0];
-                    if (!f) return;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        new THREE.TextureLoader().load(ev.target.result, (t) => {
-                            t.colorSpace = THREE.SRGBColorSpace;
-                            this.addPhotoToScene(t);
-                        });
-                    }
-                    reader.readAsDataURL(f);
-                });
-
-                // Music Mute Button REMOVED (APlayer handles UI)
-                // const muteBtn = document.getElementById('mute-btn'); 
-
-
-
-
-                // Music Input Listener REMOVED (Static Asset Only)
-                /*
-                musicInput.addEventListener('change', (e) => {
-                    // ... old logic ...
-                });
-                */
-
             }
+
+
 
             generateTextPositions(text) {
                 const canvas = document.createElement('canvas');
@@ -967,59 +882,7 @@
                 }
             }
 
-            hideLoader() {
-                const loader = document.getElementById('loader');
-                const startOverlay = document.getElementById('start-overlay');
 
-                if (loader && loader.style.display !== 'none') {
-                    console.log("Loader Finished -> Attempting Smart Autoplay");
-
-                    // 1. Try to play music immediately
-                    let autoPlaySuccess = false;
-                    const meting = document.querySelector('meting-js');
-
-                    if (meting && meting.aplayer) {
-                        const playPromise = meting.aplayer.play();
-
-                        // Modern Browsers return a Promise for play()
-                        if (playPromise !== undefined) {
-                            playPromise.then(() => {
-                                console.log("✨ Autoplay Successful! Skipping Overlay.");
-                                autoPlaySuccess = true;
-                                // If successful, we don't need the overlay
-                                this.finalizeLoader(loader, startOverlay, true);
-                            }).catch(error => {
-                                console.warn("🚫 Autoplay Blocked by Browser:", error);
-                                // Blocked? Show the Overlay as fallback
-                                this.finalizeLoader(loader, startOverlay, false);
-                            });
-                        } else {
-                            // Older way (no promise), assume success or just show overlay to be safe
-                            this.finalizeLoader(loader, startOverlay, false);
-                        }
-                    } else {
-                        // APlayer not ready? Show overlay
-                        this.finalizeLoader(loader, startOverlay, false);
-                    }
-                }
-            }
-
-            finalizeLoader(loader, startOverlay, skipOverlay) {
-                // Fade out loader
-                loader.style.opacity = 0;
-
-                setTimeout(() => {
-                    loader.style.display = 'none';
-
-                    if (!skipOverlay && startOverlay) {
-                        // Only show overlay if autoplay failed
-                        startOverlay.style.display = 'flex';
-                        requestAnimationFrame(() => {
-                            startOverlay.style.opacity = 1;
-                        });
-                    }
-                }, 800);
-            }
 
             predictWebcam() {
                 const video = document.getElementById('webcam');
@@ -1041,7 +904,14 @@
                 if (loader && loader.style.display !== 'none') {
                     console.log("Loader Finished -> Launching directly (User confident in Autoplay)");
 
-                    // 1. Play Music Immediately
+                    // 1. Force Renderer Refresh (Fixes "Disappearing Particles" bug)
+                    // Toggling UI ('H' key) likely triggered a resize/layout shift that fixed the composer.
+                    // We force it here to ensure clean start.
+                    this.onWindowResize();
+                    this.mainGroup.visible = true;
+                    STATE.mode = 'TREE';
+
+                    // 2. Play Music Immediately
                     const meting = document.querySelector('meting-js');
                     if (meting && meting.aplayer) {
                         try {
@@ -1052,7 +922,7 @@
                         }
                     }
 
-                    // 2. Hide Loader
+                    // 3. Hide Loader
                     loader.style.opacity = 0;
                     setTimeout(() => loader.style.display = 'none', 800);
                 }
