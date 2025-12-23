@@ -325,7 +325,7 @@
             // Finger Heart Debounce
             isHeartDebounce: false,
             lastHeartTime: 0,
-            hasAutoPlayed: false // New: Track if we attempted auto-play
+            userHasStarted: false // Replaces auto-play hack: Tracks click
         };
 
         // --- Main App Logic ---
@@ -362,7 +362,17 @@
                     this.bgm = new Audio(CUSTOM_ASSETS.music);
                     this.bgm.loop = true;
                     this.bgm.volume = 0.5;
+                    this.bgm.muted = true; // Start Muted for Loading
                     console.log("Loaded custom music:", CUSTOM_ASSETS.music);
+
+                    // Queue Play: If user already clicked start, play immediately
+                    if (STATE.userHasStarted) {
+                        this.bgm.muted = false;
+                        this.bgm.play().then(() => {
+                            console.log("Queue Play Success");
+                            document.getElementById('mute-btn').innerText = '🔊';
+                        }).catch(e => console.error("Queue Play Fail", e));
+                    }
                 }
             }
 
@@ -878,6 +888,8 @@
                 // --- START OVERLAY LOGIC ---
                 const startOverlay = document.getElementById('start-overlay');
                 startOverlay.addEventListener('click', () => {
+                    STATE.userHasStarted = true; // Mark interaction
+
                     // 1. Hide Overlay
                     startOverlay.style.opacity = 0;
                     setTimeout(() => startOverlay.style.display = 'none', 800);
@@ -886,8 +898,12 @@
                     if (this.bgm) {
                         isMuted = false;
                         this.bgm.muted = false;
-                        this.bgm.play().catch(e => console.error("Play failed", e));
-                        muteBtn.innerText = '🔊'; // Update Icon
+                        this.bgm.play().then(() => {
+                            console.log("Start Click Play Success");
+                            muteBtn.innerText = '🔊';
+                        }).catch(e => console.error("Start Click Play Fail", e));
+                    } else {
+                        console.log("Music not loaded yet, queued for initStaticAssets");
                     }
                 });
 
@@ -1059,27 +1075,7 @@
                 const dist = (i, j) => Math.hypot(landmarks[i].x - landmarks[j].x, landmarks[i].y - landmarks[j].y);
                 const dIndex = dist(8, 0), dMiddle = dist(12, 0), dRing = dist(16, 0), dPinky = dist(20, 0);
 
-                // --- GESTURE AUTOPLAY HACK ---
-                // Attempt to play music on first hand detection
-                // Wrapped in try-catch to ensure it NEVER blocks gesture logic
-                try {
-                    if (!STATE.hasAutoPlayed && this.bgm) {
-                        STATE.hasAutoPlayed = true;
-                        const p = this.bgm.play();
-                        if (p !== undefined) {
-                            p.then(() => {
-                                console.log("Gesture Autoplay Success!");
-                                document.getElementById('mute-btn').innerText = '🔊';
-                                if (this.bgm) this.bgm.muted = false;
-                            }).catch(e => {
-                                // Silent fail is fine, user can click mute button
-                                console.warn("Autoplay blocked (Expected):", e);
-                            });
-                        }
-                    }
-                } catch (err) {
-                    console.warn("Autoplay Logic Error:", err);
-                }
+
 
                 // --- LOVE MODE LOGIC ---
 
