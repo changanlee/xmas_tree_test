@@ -190,7 +190,7 @@
         <!-- Hidden Inputs for logic compatibility -->
         <input type="file" id="file-input" accept="image/*" style="display: none">
         <input type="file" id="music-input" accept="audio/*" style="display: none">
-        <div class="instruction">Press 'H' to Hide Controls</div>
+        <!-- <div class="instruction">Press 'H' to Hide Controls</div> -->
     </div>
 
     <!-- Hidden Webcam -->
@@ -237,7 +237,8 @@
         };
 
         // --- CUSTOM ASSETS FOR GITHUB PAGES ---
-        // Edit this section to load your own files!
+        // IMPORTANT: Web pages CANNOT scan your folders automatically.
+        // You MUST explicitly list every file name you want to load below.
         const CUSTOM_ASSETS = {
             // 1. Photos: Put them in a folder (e.g. 'photos/') and list filenames here
             // Example: ['photos/pic1.jpg', 'photos/pic2.png']
