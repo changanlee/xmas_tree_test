@@ -147,16 +147,7 @@
             overflow: hidden;
         }
 
-        /* NetEase Player Position */
-        #netease-player {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 9999;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            overflow: hidden;
-        }
+
 
         .top-right-ui {
             position: absolute;
@@ -218,6 +209,10 @@
             }
         }
     </script>
+    <!-- Dependencies for MetingJS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/meting@2.0.1/dist/Meting.min.js"></script>
 
 </head>
 
@@ -236,18 +231,15 @@
     </div>
 
     <!-- NetEase Cloud Music Iframe -->
-    <div id="netease-player">
-        <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86"
-            src="//music.163.com/outchain/player?type=2&id=2105121607&auto=1&height=66">
-        </iframe>
-    </div>
+    <!-- MetingJS (Powered by APlayer) -->
+    <meting-js name="Christmas Star" artist="Jay Chou" url="music/JayChou-Chrismas_Star.mp3"
+        cover="https://cdn-icons-png.flaticon.com/512/614/614105.png" fixed="true" autoplay="true" theme="#d4af37">
+    </meting-js>
 
     <!-- UI -->
     <h1>Merry Christmas</h1>
 
-    <div class="top-right-ui">
-        <button class="upload-btn" id="mute-btn" style="min-width: 50px;">�</button>
-    </div>
+
 
     <div class="upload-wrapper">
         <!-- Removed Upload & Music Buttons for GitHub Deployment -->
