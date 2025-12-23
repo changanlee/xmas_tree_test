@@ -206,6 +206,7 @@
             }
         }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
 </head>
 
 <body>
@@ -357,22 +358,33 @@
                     });
                 }
 
-                // 2. Load Music
+                // 2. Load Music (Howler.js)
                 if (CUSTOM_ASSETS.music) {
-                    this.bgm = new Audio(CUSTOM_ASSETS.music);
-                    this.bgm.loop = true;
-                    this.bgm.volume = 0.5;
-                    this.bgm.muted = true; // Start Muted for Loading
-                    console.log("Loaded custom music:", CUSTOM_ASSETS.music);
-
-                    // Queue Play: If user already clicked start, play immediately
-                    if (STATE.userHasStarted) {
-                        this.bgm.muted = false;
-                        this.bgm.play().then(() => {
-                            console.log("Queue Play Success");
-                            document.getElementById('mute-btn').innerText = '🔊';
-                        }).catch(e => console.error("Queue Play Fail", e));
-                    }
+                    this.bgm = new Howl({
+                        src: [CUSTOM_ASSETS.music],
+                        loop: true,
+                        volume: 0.5,
+                        html5: true, // Force HTML5 Audio (better for large files/streaming)
+                        preload: true,
+                        onload: () => {
+                            console.log("Howler: Music Loaded");
+                            // Queue Play Logic
+                            if (STATE.userHasStarted) {
+                                this.bgm.play();
+                                this.bgm.fade(0, 0.5, 1000); // Fade in
+                                document.getElementById('mute-btn').innerText = '🔊';
+                            }
+                        },
+                        onloaderror: (id, err) => {
+                            console.warn("Howler Load Error:", err);
+                        },
+                        onplayerror: (id, err) => {
+                            console.warn("Howler Play Error (Autoplay Blocked?):", err);
+                            this.bgm.once('unlock', () => {
+                                this.bgm.play();
+                            });
+                        }
+                    });
                 }
             }
 
@@ -872,15 +884,16 @@
                 muteBtn.innerText = '🔇';
 
                 // Mute/Unmute Logic
+                // Mute/Unmute Logic
                 muteBtn.addEventListener('click', () => {
                     isMuted = !isMuted;
                     muteBtn.innerText = isMuted ? '🔇' : '🔊';
 
                     if (this.bgm) {
-                        this.bgm.muted = isMuted;
+                        this.bgm.mute(isMuted);
                         // Auto-play on first unmute interaction if permitted
-                        if (!isMuted && this.bgm.paused) {
-                            this.bgm.play().catch(e => console.log("Autoplay prevented", e));
+                        if (!isMuted && !this.bgm.playing()) {
+                            this.bgm.play();
                         }
                     }
                 });
