@@ -153,6 +153,47 @@
             right: 20px;
             z-index: 20;
         }
+
+        /* Start Overlay */
+        #start-overlay {
+            display: none;
+            /* User requested removal */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: opacity 0.8s ease;
+        }
+
+        .start-text {
+            font-family: 'Cinzel', serif;
+            color: var(--color-gold);
+            font-size: 24px;
+            letter-spacing: 4px;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
     </style>
 
     <!-- Import Map -->
@@ -175,11 +216,17 @@
         <div class="loader-text">LOADING HOLIDAY MAGIC</div>
     </div>
 
+    <!-- Start Overlay -->
+    <div id="start-overlay">
+        <div class="start-text">CLICK TO ENTER MAGIC</div>
+        <div style="font-size: 12px; color: #666; margin-top: 10px;">(Enables Audio)</div>
+    </div>
+
     <!-- UI -->
     <h1>Merry Christmas</h1>
 
     <div class="top-right-ui">
-        <button class="upload-btn" id="mute-btn" style="min-width: 50px;">🔊</button>
+        <button class="upload-btn" id="mute-btn" style="min-width: 50px;">�</button>
     </div>
 
     <div class="upload-wrapper">
@@ -243,9 +290,8 @@
             // 1. Photos: Put them in a folder (e.g. 'photos/') and list filenames here
             // Example: ['photos/pic1.jpg', 'photos/pic2.png']
             photos: [
-                'photos/CleanShot 2025-09-18 at 16.44.10@2x.png', 
-                'photos/IMG_6824.PNG',
-                'photos/帥.jpg'
+                // 'photos/1.jpg', 
+                // 'photos/2.jpg'
             ],
 
             // 2. Music: Put mp3 in a folder (e.g. 'music/') and set path here
@@ -278,7 +324,8 @@
             },
             // Finger Heart Debounce
             isHeartDebounce: false,
-            lastHeartTime: 0
+            lastHeartTime: 0,
+            hasAutoPlayed: false // New: Track if we attempted auto-play
         };
 
         // --- Main App Logic ---
@@ -810,7 +857,9 @@
                 // const musicInput = document.getElementById('music-input'); // HIDDEN
 
                 // We use this.bgm loaded from initStaticAssets
-                let isMuted = false;
+                // FORCE START AS MUTED: Aligns with Browser Autoplay Policy
+                let isMuted = true;
+                muteBtn.innerText = '🔇';
 
                 // Mute/Unmute Logic
                 muteBtn.addEventListener('click', () => {
@@ -823,6 +872,22 @@
                         if (!isMuted && this.bgm.paused) {
                             this.bgm.play().catch(e => console.log("Autoplay prevented", e));
                         }
+                    }
+                });
+
+                // --- START OVERLAY LOGIC ---
+                const startOverlay = document.getElementById('start-overlay');
+                startOverlay.addEventListener('click', () => {
+                    // 1. Hide Overlay
+                    startOverlay.style.opacity = 0;
+                    setTimeout(() => startOverlay.style.display = 'none', 800);
+
+                    // 2. Play Music (Interaction allows this!)
+                    if (this.bgm) {
+                        isMuted = false;
+                        this.bgm.muted = false;
+                        this.bgm.play().catch(e => console.error("Play failed", e));
+                        muteBtn.innerText = '🔊'; // Update Icon
                     }
                 });
 
@@ -986,6 +1051,23 @@
             processGestures(allLandmarks) {
                 // Safety: Ensure we have at least one hand
                 if (!allLandmarks || allLandmarks.length === 0) return;
+
+                // --- GESTURE AUTOPLAY HACK ---
+                // Attempt to play music on first hand detection
+                if (!STATE.hasAutoPlayed && this.bgm) {
+                    STATE.hasAutoPlayed = true; // Try only once to avoid error spam
+                    const p = this.bgm.play();
+                    if (p !== undefined) {
+                        p.then(() => {
+                            console.log("Gesture Autoplay Success!");
+                            document.getElementById('mute-btn').innerText = '🔊';
+                            if (this.bgm) this.bgm.muted = false;
+                        }).catch(e => {
+                            console.warn("Gesture Autoplay Blocked by Browser:", e);
+                            // Fallback: User must click mute button manually
+                        });
+                    }
+                }
 
                 // Use the first hand for standard interaction
                 const landmarks = allLandmarks[0];
