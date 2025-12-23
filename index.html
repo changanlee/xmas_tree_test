@@ -154,6 +154,18 @@
             z-index: 20;
         }
 
+        /* APlayer Customization */
+        #aplayer {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 300px;
+            z-index: 9999;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            /* Gold glow */
+            border-radius: 4px;
+        }
+
         /* Start Overlay */
         #start-overlay {
             display: none;
@@ -206,7 +218,8 @@
             }
         }
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aplayer/1.10.1/APlayer.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aplayer/1.10.1/APlayer.min.js"></script>
 </head>
 
 <body>
@@ -358,33 +371,35 @@
                     });
                 }
 
-                // 2. Load Music (Howler.js)
+                // 2. Load Music (APlayer)
                 if (CUSTOM_ASSETS.music) {
-                    this.bgm = new Howl({
-                        src: [CUSTOM_ASSETS.music],
-                        loop: true,
-                        volume: 0.5,
-                        html5: true, // Force HTML5 Audio (better for large files/streaming)
-                        preload: true,
-                        onload: () => {
-                            console.log("Howler: Music Loaded");
-                            // Queue Play Logic
-                            if (STATE.userHasStarted) {
-                                this.bgm.play();
-                                this.bgm.fade(0, 0.5, 1000); // Fade in
-                                document.getElementById('mute-btn').innerText = '🔊';
+                    this.ap = new APlayer({
+                        container: document.getElementById('aplayer'),
+                        fixed: false, // Widget mode (bottom-left)
+                        autoplay: false, // Browser policy blocks this anyway
+                        theme: '#d4af37', // Gold theme
+                        loop: 'all',
+                        order: 'list',
+                        preload: 'auto',
+                        volume: 0.7,
+                        mutex: true,
+                        listFolded: false,
+                        audio: [
+                            {
+                                name: 'Christmas Star',
+                                artist: 'Music',
+                                url: CUSTOM_ASSETS.music,
+                                cover: 'https://cdn-icons-png.flaticon.com/512/614/614105.png' // Default festive icon
                             }
-                        },
-                        onloaderror: (id, err) => {
-                            console.warn("Howler Load Error:", err);
-                        },
-                        onplayerror: (id, err) => {
-                            console.warn("Howler Play Error (Autoplay Blocked?):", err);
-                            this.bgm.once('unlock', () => {
-                                this.bgm.play();
-                            });
-                        }
+                        ]
                     });
+
+                    console.log("APlayer Initialized");
+
+                    // Queue Play Logic
+                    if (STATE.userHasStarted) {
+                        this.ap.play();
+                    }
                 }
             }
 
@@ -873,30 +888,9 @@
                     reader.readAsDataURL(f);
                 });
 
-                // Music Control (Modified for Static Asset)
-                const musicBtn = document.getElementById('music-btn'); // Now Removed from HTML?
-                const muteBtn = document.getElementById('mute-btn');
-                // const musicInput = document.getElementById('music-input'); // HIDDEN
+                // Music Mute Button REMOVED (APlayer handles UI)
+                // const muteBtn = document.getElementById('mute-btn'); 
 
-                // We use this.bgm loaded from initStaticAssets
-                // FORCE START AS MUTED: Aligns with Browser Autoplay Policy
-                let isMuted = true;
-                muteBtn.innerText = '🔇';
-
-                // Mute/Unmute Logic
-                // Mute/Unmute Logic
-                muteBtn.addEventListener('click', () => {
-                    isMuted = !isMuted;
-                    muteBtn.innerText = isMuted ? '🔇' : '🔊';
-
-                    if (this.bgm) {
-                        this.bgm.mute(isMuted);
-                        // Auto-play on first unmute interaction if permitted
-                        if (!isMuted && !this.bgm.playing()) {
-                            this.bgm.play();
-                        }
-                    }
-                });
 
                 // --- START OVERLAY LOGIC ---
                 const startOverlay = document.getElementById('start-overlay');
