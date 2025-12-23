@@ -188,10 +188,6 @@
         //     return false;
         // };
 
-        // --- Mobile Detection ---
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 800;
-        console.log("Device detected as Mobile:", isMobile);
-
         // --- Configuration ---
         const CONFIG = {
             colors: {
@@ -204,9 +200,13 @@
                 blue: 0x4169e1
             },
             particles: {
-                // Dynamic Quality: Reduce count for mobile to prevent crashing/freezing
-                mainCount: isMobile ? 800 : 2000,
-                dustCount: isMobile ? 1500 : 4000,
+                mainCount: 2000,
+                dustCount: 4000,
+                scatterRadius: 20
+            },
+            particles: {
+                mainCount: 2000,
+                dustCount: 4000,
                 scatterRadius: 20
             },
             // textPhotoContent: "JOYEUX NOEL", // Deprecated
@@ -216,8 +216,7 @@
                 "Happy New Year",
                 "Love & Peace"
             ],
-            // Lower threshold for mobile for easier exits
-            gestures: { palmOpenThreshold: isMobile ? 0.30 : 0.35, sensitivity: 6.0 }
+            gestures: { palmOpenThreshold: 0.35, sensitivity: 6.0 }
         };
 
         // --- CUSTOM ASSETS FOR GITHUB PAGES ---
@@ -544,9 +543,8 @@
                     white: new THREE.MeshStandardMaterial({ color: colors.white, roughness: 0.9 })
                 };
 
-                // 1. Main Particles (Dynamic Count)
-                const loveCount = CONFIG.particles.mainCount; // Use same count density as tree
-                for (let i = 0; i < loveCount; i++) {
+                // 1. Main Particles (2000)
+                for (let i = 0; i < 2000; i++) {
                     let mesh, type;
                     const r = Math.random();
 
@@ -1027,8 +1025,8 @@
                 if (STATE.mode === 'LOVE_HEART') {
                     // A. STRICT TIME LOCK (Animation Loop)
                     // Requirements: "Cannot accept any gesture until animation runs out"
-                    // UPDATED: Reduced from 8s to 3s to prevent "stuck" feeling on mobile
-                    if (!STATE.lastHeartModeStart || (Date.now() - STATE.lastHeartModeStart < 3000)) return;
+                    // We set a fixed duration of 8 seconds for the "Show".
+                    if (!STATE.lastHeartModeStart || (Date.now() - STATE.lastHeartModeStart < 8000)) return;
 
                     // B. Hold Lock: If still holding Two-Hand Heart, DO NOT EXIT
                     // (Prevents accidental exit if user holds gesture too long)
