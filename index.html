@@ -204,16 +204,13 @@
                 dustCount: 4000,
                 scatterRadius: 20
             },
-            particles: {
-                mainCount: 2000,
-                dustCount: 4000,
-                scatterRadius: 20
-            },
+
             // textPhotoContent: "JOYEUX NOEL", // Deprecated
             cardMessages: [
                 "Merry Christmas",
-                "Joy to the World\n ya",
-                "Love & Peace"
+                "Joy to the World",
+                "Happy New Year",
+                "Love & Peace\nYa"
             ],
             gestures: { palmOpenThreshold: 0.35, sensitivity: 6.0 }
         };
@@ -225,7 +222,7 @@
             // 1. Photos: Put them in a folder (e.g. 'photos/') and list filenames here
             // Example: ['photos/pic1.jpg', 'photos/pic2.png']
             photos: [
-                'photos/xmas.jpeg', 
+                // 'photos/1.jpg', 
                 // 'photos/2.jpg'
             ],
 
@@ -734,23 +731,44 @@
 
                 // 4. Text
                 ctx.fillStyle = '#8B0000'; // Dark Red
-                // Adjust font size based on text length
-                const fontSize = text.length > 10 ? 60 : 80;
-                ctx.font = `bold ${fontSize}px "Cinzel", serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
 
-                // Breaking text into lines if too long? For now simple wrap
-                const words = text.split(' ');
-                if (words.length > 2) {
-                    // Simple 2-line split
-                    const mid = Math.ceil(words.length / 2);
-                    const line1 = words.slice(0, mid).join(' ');
-                    const line2 = words.slice(mid).join(' ');
-                    ctx.fillText(line1, width / 2, height / 2 - 40);
-                    ctx.fillText(line2, width / 2, height / 2 + 40);
+                // Handle Manual Line Breaks (\n)
+                const lines = text.split('\n');
+
+                if (lines.length > 1) {
+                    // Multi-line support
+                    const lineHeight = 100; // Vertical spacing
+                    const totalHeight = (lines.length - 1) * lineHeight;
+                    const startY = (height / 2) - (totalHeight / 2);
+
+                    lines.forEach((line, index) => {
+                        // Adjust font size slightly for multiline
+                        const fontSize = line.length > 10 ? 60 : 80;
+                        ctx.font = `bold ${fontSize}px "Cinzel", serif`;
+                        ctx.fillText(line, width / 2, startY + (index * lineHeight));
+                    });
+
                 } else {
-                    ctx.fillText(text, width / 2, height / 2);
+                    // Single line (Legacy auto-wrap or simple center)
+                    const words = text.split(' ');
+                    // Simple auto-wrap for long sentences without \n
+                    if (words.length > 2 && text.length > 15) {
+                        // Auto-split logic for long sentences without \n
+                        const mid = Math.ceil(words.length / 2);
+                        const line1 = words.slice(0, mid).join(' ');
+                        const line2 = words.slice(mid).join(' ');
+
+                        ctx.font = `bold 60px "Cinzel", serif`;
+                        ctx.fillText(line1, width / 2, height / 2 - 40);
+                        ctx.fillText(line2, width / 2, height / 2 + 40);
+                    } else {
+                        // Standard single line
+                        const fontSize = text.length > 10 ? 60 : 80;
+                        ctx.font = `bold ${fontSize}px "Cinzel", serif`;
+                        ctx.fillText(text, width / 2, height / 2);
+                    }
                 }
 
                 // Decorative Corner (Simple Circle)
@@ -1013,8 +1031,6 @@
                 const dIndex = dist(8, 0), dMiddle = dist(12, 0), dRing = dist(16, 0), dPinky = dist(20, 0);
 
 
-
-                // --- LOVE MODE LOGIC ---
 
                 // --- LOVE MODE LOGIC ---
                 // 1. Lock: Gallery Mode -> NO INTERACTION
@@ -1553,92 +1569,6 @@
                         targetPos.setFromSphericalCoords(r, phi, theta);
                         // Add some movement
                         targetPos.y += Math.sin(STATE.time + idx) * 2;
-                    }
-
-                } else if (STATE.mode === 'LOVE_GALLERY') {
-                    // Phase 1: Gallery (Sliding Mode)
-                    if (this.type === 'PHOTO') {
-                        const photos = STATE.loveSeq.photos;
-                        const gIdx = STATE.loveSeq.galleryIndex;
-                        const myIdx = photos.indexOf(this);
-
-                        // Relative position: diff = 0 (Center), 1 (Right), -1 (Left)
-                        let diff = myIdx - gIdx;
-
-                        // Spacing
-                        const spacing = 45; // Spread out 
-
-                        if (Math.abs(diff) <= 2) {
-                            // Visible Range (Center, Left, Right, +/-2 for smooth entry/exit)
-                            targetPos.set(diff * spacing, 0, 30 - Math.abs(diff) * 10);
-
-                            if (diff === 0) {
-                                targetScale.set(10, 10, 10); // Center: Big
-                                targetRot.set(0, 0, 0);
-                            } else {
-                                targetScale.set(6, 6, 6); // Side: Smaller
-                                targetRot.set(0, diff * 0.5, 0); // Angled inward
-                            }
-                        } else {
-                            // Hidden
-                            targetPos.set(diff * spacing, -500, 0);
-                            targetScale.set(0, 0, 0);
-                        }
-
-                        // NO GLOW logic needed (handled by resetMaterial default)
-                    } else {
-                        // Decorations form a starry background
-                        const r = 50 + (this.treeT * 50);
-                        const phi = Math.acos(-1 + (2 * this.randomOffset));
-                        const theta = Math.sqrt(Math.PI * 100) * (this.treeT * 10);
-
-                        targetPos.setFromSphericalCoords(r, phi, theta);
-                        // Rotate slow background
-                        const rotSpeed = 0.2;
-                        targetPos.applyAxisAngle(new THREE.Vector3(0, 1, 0), STATE.time * rotSpeed);
-
-                        targetRot.set(STATE.time, STATE.time, 0);
-                    }
-
-                } else if (STATE.mode === 'LOVE_HEART') {
-                    // Phase 2: Heart & Text
-
-                    if (this.loveRole === 'TEXT') {
-                        const p = this.loveTarget;
-                        if (p) {
-                            targetPos.set(p.x, p.y, p.z);
-                            targetScale.set(0.5, 0.5, 0.5);
-                            // Jitter
-                            targetPos.x += Math.sin(STATE.time * 10 + idx) * 0.1;
-                            targetPos.y += Math.cos(STATE.time * 10 + idx) * 0.1;
-                        } else {
-                            targetPos.set(0, -200, 0);
-                        }
-                        targetRot.set(0, 0, 0);
-
-                    } else {
-                        // Default: Solid Heart Shape (Not Hollow)
-                        let t = (idx / total) * Math.PI * 2;
-                        t = (t + this.treeT * Math.PI) % (Math.PI * 2);
-
-                        // SCALE DOWN HEART (0.28x)
-                        const scale = 0.9;
-
-                        // Hollow Logic (Reverting fill)
-                        const x = 16 * Math.pow(Math.sin(t), 3);
-                        const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-                        const z = (this.randomOffset - 0.5) * 5;
-
-                        targetPos.set(x * scale, y * scale + 4, z * scale); // Shift Y (+4) 
-
-                        if (this.type === 'PHOTO') {
-                            // Photos hidden in Heart Mode
-                            targetScale.set(0, 0, 0);
-                            targetPos.set(0, -900, 0);
-                        } else {
-                            targetScale.set(1, 1, 1);
-                            targetRot.set(STATE.time, STATE.time, 0);
-                        }
                     }
                 }
 
